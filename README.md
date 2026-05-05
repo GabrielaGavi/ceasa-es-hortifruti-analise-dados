@@ -2,7 +2,8 @@
 
 ## Tema
 
-Análise preliminar de preços, quantidade comercializada e comportamento mensal de hortifruti na CEASA-ES, com foco nos dados CONAB/Prohort de 2025 filtrados para CEASA/ES - Vitória.
+Análise de preços e procedência de hortifrúti na CEASA-ES, com foco nos dados CONAB/Prohort de 2025 filtrados para CEASA/ES - Vitória. Grupo: Gabriela Gave Gavi, Jeronymo Francisco Moreira Neto, José Luiz dos Santos Azeredo Mendes, Pedro Henrique Bispo Sarmento, Pedro Henrique Ferreira Bonela.
+
 
 ## Sociedade impactada
 
@@ -141,5 +142,4 @@ projeto-analise-dados-ceasa-hortifruti/
 
 1. Detecção estatística de variações incomuns: regra preliminar baseada na variação percentual mensal por produto.
 2. K-Means: modelo de aprendizado de máquina não supervisionado para agrupamento preliminar de produtos por comportamento de preço, volatilidade e quantidade.
-
 
