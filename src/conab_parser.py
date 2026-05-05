@@ -19,6 +19,22 @@ from .preprocessing import (
 
 HORTALICAS = {"alface", "batata", "cebola", "cenoura", "tomate"}
 FRUTAS = {"banana", "laranja", "maca", "mamao", "melancia"}
+ANO_ANALISE = 2025
+MESES_PT = {
+    "janeiro": 1,
+    "fevereiro": 2,
+    "marco": 3,
+    "março": 3,
+    "abril": 4,
+    "maio": 5,
+    "junho": 6,
+    "julho": 7,
+    "agosto": 8,
+    "setembro": 9,
+    "outubro": 10,
+    "novembro": 11,
+    "dezembro": 12,
+}
 
 
 KEYWORDS = {
@@ -250,6 +266,7 @@ def consolidar_xlsx(raw_dir: str | Path) -> pd.DataFrame:
             frames.append(parcial)
         except Exception as exc:
             print(f"[AVISO] Erro ao processar {arquivo.name}: {exc}")
+    frames = [frame for frame in frames if not frame.empty]
     if not frames:
         return pd.DataFrame(columns=COLUNAS_FINAIS)
     df = finalizar_base(pd.concat(frames, ignore_index=True))
@@ -259,7 +276,7 @@ def consolidar_xlsx(raw_dir: str | Path) -> pd.DataFrame:
         df.groupby(["ano", "mes", "ceasa", "produto", "categoria"], dropna=False, as_index=False)
         .agg(
             preco_medio_kg=("preco_medio_kg", "mean"),
-            quantidade_kg=("quantidade_kg", lambda s: s.sum(min_count=1)),
+            quantidade_kg=("quantidade_kg", "mean"),
             fonte_arquivo=("fonte_arquivo", lambda s: "; ".join(sorted(set(map(str, s))))),
             fonte_aba=("fonte_aba", lambda s: "; ".join(sorted(set(map(str, s))))),
         )
@@ -298,7 +315,10 @@ def _extrair_aba_produto_especifico(caminho: Path, aba: str) -> pd.DataFrame:
 
     header_idx = None
     for idx in range(min(8, len(bruto))):
-        if normalizar_texto(bruto.iloc[idx, 0]) == "ceasa":
+        primeira_coluna = normalizar_texto(bruto.iloc[idx, 0])
+        periodos = [_periodo_coluna(valor) for valor in bruto.iloc[idx, 1:].tolist()]
+        tem_2025 = sum(1 for periodo in periodos if periodo and periodo[0] == ANO_ANALISE) >= 2
+        if primeira_coluna == "ceasa" or tem_2025:
             header_idx = idx
             break
     if header_idx is None:
@@ -314,39 +334,52 @@ def _extrair_aba_produto_especifico(caminho: Path, aba: str) -> pd.DataFrame:
 
     headers = bruto.iloc[header_idx].tolist()
     valores = bruto.iloc[linha_ceasa].tolist()
-    candidatos = []
+    is_preco = aba_norm.startswith("precos") or "preco" in normalizar_texto(bruto.iloc[2, 0] if len(bruto) > 2 else "")
+    if is_preco and "2026" not in caminho.stem:
+        return pd.DataFrame(columns=COLUNAS_FINAIS)
+    registros = []
     for col_idx in range(1, len(headers)):
         header = headers[col_idx]
         valor = numero_brasileiro(valores[col_idx] if col_idx < len(valores) else None)
         if pd.isna(valor):
             continue
-        header_norm = normalizar_texto(header)
-        if not header_norm:
+        periodo = _periodo_coluna(header)
+        if not periodo or periodo[0] != ANO_ANALISE:
             continue
-        if "variacao" in header_norm or "/" in header_norm:
-            continue
-        candidatos.append((col_idx, header, valor))
-    if not candidatos:
+        ano, mes = periodo
+        registros.append(
+            {
+                "ano": ano,
+                "mes": mes,
+                "ceasa": "CEASA/ES - Vitória",
+                "produto": produto.upper(),
+                "categoria": _categoria_por_produto(produto),
+                "preco_medio_kg": valor if is_preco else pd.NA,
+                "quantidade_kg": pd.NA if is_preco else valor,
+                "fonte_arquivo": caminho.name,
+                "fonte_aba": aba,
+            }
+        )
+    if not registros:
         return pd.DataFrame(columns=COLUNAS_FINAIS)
+    return finalizar_base(pd.DataFrame(registros))
 
-    ano = ano_por_nome_arquivo(caminho)
-    mes = mes_por_nome_arquivo(caminho)
-    escolhido = _escolher_coluna_periodo(candidatos, ano, mes)
-    valor = escolhido[2]
-    is_preco = aba_norm.startswith("precos") or "preco" in normalizar_texto(bruto.iloc[1, 0] if len(bruto) > 1 else "")
 
-    row = {
-        "ano": ano,
-        "mes": mes,
-        "ceasa": "CEASA/ES - Vitória",
-        "produto": produto.upper(),
-        "categoria": _categoria_por_produto(produto),
-        "preco_medio_kg": valor if is_preco else pd.NA,
-        "quantidade_kg": pd.NA if is_preco else valor,
-        "fonte_arquivo": caminho.name,
-        "fonte_aba": aba,
-    }
-    return finalizar_base(pd.DataFrame([row]))
+def _periodo_coluna(valor: object) -> tuple[int, int] | None:
+    data = pd.to_datetime(valor, errors="coerce")
+    if pd.notna(data):
+        return int(data.year), int(data.month)
+
+    texto = normalizar_texto(valor)
+    if not texto or "variacao" in texto or "/" in texto:
+        return None
+    ano_match = pd.Series([texto]).str.extract(r"(20\d{2})").iloc[0, 0]
+    if pd.isna(ano_match):
+        return None
+    for mes_nome, mes_numero in MESES_PT.items():
+        if normalizar_texto(mes_nome) in texto:
+            return int(ano_match), mes_numero
+    return None
 
 
 def _escolher_coluna_periodo(candidatos: list[tuple[int, object, float]], ano: int, mes: int | None) -> tuple[int, object, float]:

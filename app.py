@@ -129,7 +129,7 @@ with tab_precos:
 with tab_qtd:
     total_prod = quantidade_total_produto(df).sort_values("quantidade_total_kg", ascending=False)
     st.plotly_chart(px.bar(total_prod.head(25), x="produto", y="quantidade_total_kg", title="Produtos mais comercializados"), use_container_width=True)
-    qtd_mensal = df.groupby(["produto", "mes"], as_index=False)["quantidade_kg"].sum()
+    qtd_mensal = df.dropna(subset=["quantidade_kg"]).groupby(["produto", "mes"], as_index=False)["quantidade_kg"].sum()
     produtos_qtd = st.multiselect("Produtos para linha de quantidade", produtos, default=produtos[: min(5, len(produtos))], key="prod_qtd")
     st.plotly_chart(px.line(qtd_mensal[qtd_mensal["produto"].isin(produtos_qtd)], x="mes", y="quantidade_kg", color="produto", markers=True, title="Quantidade mensal por produto"), use_container_width=True)
     dispersao = (
@@ -209,7 +209,7 @@ with tab_sazonalidade:
             use_container_width=True,
         )
     st.caption(
-        "Índices acima de 100 indicam meses em que o produto ficou acima da própria média anual; "
+        "Índices acima de 100 indicam meses em que o preço ficou acima da própria média anual; "
         "índices abaixo de 100 indicam meses abaixo da média anual."
     )
 

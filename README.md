@@ -15,26 +15,27 @@ Esta entrega apresenta um protótipo preliminar, ainda não caracterizado como M
 
 ## Fonte dos dados
 
-A base principal utiliza arquivos XLSX da CONAB/Prohort referentes ao ano de 2025, baixados manualmente pelo grupo. Os arquivos devem ficar em:
+A base principal utiliza os arquivos XLSX da CONAB/Prohort baixados manualmente pelo grupo. O arquivo de janeiro de 2026 é usado como fonte principal de preços, pois contém a série de preços de 2025 nas abas por produto. Os boletins mensais de 2025 complementam a série de quantidade por produto.
+
+Os arquivos devem ficar em:
 
 ```text
 data/raw/conab_prohort_2025/
 ```
 
-Nomes esperados:
+Arquivo principal esperado:
 
 ```text
-janeiro_2025.xlsx
+janeiro_2026_base_2025.xlsx
+```
+
+Também podem ser usados os boletins mensais de 2025 para complementar as quantidades:
+
+```text
 fevereiro_2025.xlsx
 marco_2025.xlsx
 abril_2025.xlsx
-maio_2025.xlsx
-junho_2025.xlsx
-julho_2025.xlsx
-agosto_2025.xlsx
-setembro_2025.xlsx
-outubro_2025.xlsx
-novembro_2025.xlsx
+...
 dezembro_2025.xlsx
 ```
 
@@ -142,4 +143,3 @@ projeto-analise-dados-ceasa-hortifruti/
 
 1. Detecção estatística de variações incomuns: regra preliminar baseada na variação percentual mensal por produto.
 2. K-Means: modelo de aprendizado de máquina não supervisionado para agrupamento preliminar de produtos por comportamento de preço, volatilidade e quantidade.
-
