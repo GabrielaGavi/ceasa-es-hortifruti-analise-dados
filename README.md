@@ -4,6 +4,8 @@
 
 Análise de preços e procedência de hortifrúti na CEASA-ES, com foco nos dados CONAB/Prohort de 2025 filtrados para CEASA/ES - Vitória. Grupo: Gabriela Gave Gavi, Jeronymo Francisco Moreira Neto, José Luiz dos Santos Azeredo Mendes, Pedro Henrique Bispo Sarmento, Pedro Henrique Ferreira Bonela.
 
+- Vídeo demonstração protótipo (entrega 2) - https://youtu.be/oIwFn-vIlMM
+
 
 ## Sociedade impactada
 
