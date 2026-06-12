@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import sys
+from argparse import ArgumentParser
 from pathlib import Path
 
 import pandas as pd
@@ -14,6 +15,15 @@ from src.conab_parser import consolidar_xlsx, listar_xlsx
 RAW_DIR = ROOT / "data/raw/conab_prohort_2025"
 SAIDA = ROOT / "data/processed/conab_prohort_2025_ceasa_es.csv"
 SAMPLE = ROOT / "data/sample/dados_exemplo_conab_prohort_2025.csv"
+ANO_PADRAO = 2025
+
+
+def parse_args():
+    parser = ArgumentParser(description="Converte planilhas CONAB/Prohort em CSV padronizado.")
+    parser.add_argument("--raw-dir", type=Path, default=RAW_DIR, help="Diretorio com arquivos XLSX de entrada.")
+    parser.add_argument("--saida", type=Path, default=SAIDA, help="Arquivo CSV de saida.")
+    parser.add_argument("--ano", type=int, default=ANO_PADRAO, help="Ano da serie a extrair das abas por produto.")
+    return parser.parse_args()
 
 
 def criar_sample() -> None:
@@ -37,10 +47,14 @@ def criar_sample() -> None:
 
 
 if __name__ == "__main__":
-    if not listar_xlsx(RAW_DIR):
+    args = parse_args()
+    raw_dir = args.raw_dir if args.raw_dir.is_absolute() else ROOT / args.raw_dir
+    saida = args.saida if args.saida.is_absolute() else ROOT / args.saida
+
+    if not listar_xlsx(raw_dir):
         criar_sample()
         sys.exit(0)
-    df = consolidar_xlsx(RAW_DIR)
-    SAIDA.parent.mkdir(parents=True, exist_ok=True)
-    df.to_csv(SAIDA, index=False, encoding="utf-8")
-    print(f"CSV consolidado salvo em {SAIDA} com {len(df)} registros.")
+    df = consolidar_xlsx(raw_dir, ano_analise=args.ano)
+    saida.parent.mkdir(parents=True, exist_ok=True)
+    df.to_csv(saida, index=False, encoding="utf-8")
+    print(f"CSV consolidado salvo em {saida} com {len(df)} registros.")

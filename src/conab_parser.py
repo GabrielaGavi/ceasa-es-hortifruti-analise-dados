@@ -190,12 +190,12 @@ def gerar_relatorio_diagnostico(raw_dir: str | Path, saida: str | Path) -> None:
     Path(saida).write_text("\n".join(linhas), encoding="utf-8")
 
 
-def extrair_arquivo(caminho: Path) -> pd.DataFrame:
+def extrair_arquivo(caminho: Path, ano_analise: int = ANO_ANALISE) -> pd.DataFrame:
     registros = []
     xls = pd.ExcelFile(caminho)
     for aba in xls.sheet_names:
         try:
-            especifica = _extrair_aba_produto_especifico(caminho, aba)
+            especifica = _extrair_aba_produto_especifico(caminho, aba, ano_analise)
             if not especifica.empty:
                 registros.append(especifica)
                 continue
@@ -256,11 +256,11 @@ def _extrair_aba(df: pd.DataFrame, caminho: Path, aba: str) -> pd.DataFrame:
     return finalizar_base(saida)
 
 
-def consolidar_xlsx(raw_dir: str | Path) -> pd.DataFrame:
+def consolidar_xlsx(raw_dir: str | Path, ano_analise: int = ANO_ANALISE) -> pd.DataFrame:
     frames = []
     for arquivo in listar_xlsx(raw_dir):
         try:
-            parcial = extrair_arquivo(arquivo)
+            parcial = extrair_arquivo(arquivo, ano_analise)
             if parcial.empty:
                 print(f"[AVISO] Nenhum registro CEASA/ES - Vitória extraído de {arquivo.name}.")
             frames.append(parcial)
@@ -301,7 +301,7 @@ def _categoria_por_produto(produto: str) -> str:
     return ""
 
 
-def _extrair_aba_produto_especifico(caminho: Path, aba: str) -> pd.DataFrame:
+def _extrair_aba_produto_especifico(caminho: Path, aba: str, ano_analise: int = ANO_ANALISE) -> pd.DataFrame:
     aba_norm = normalizar_texto(aba)
     if not (aba_norm.startswith("precos-") or aba_norm.startswith("precos_") or aba_norm.startswith("quantidade-") or aba_norm.startswith("quantidade_")):
         return pd.DataFrame(columns=COLUNAS_FINAIS)
@@ -317,8 +317,8 @@ def _extrair_aba_produto_especifico(caminho: Path, aba: str) -> pd.DataFrame:
     for idx in range(min(8, len(bruto))):
         primeira_coluna = normalizar_texto(bruto.iloc[idx, 0])
         periodos = [_periodo_coluna(valor) for valor in bruto.iloc[idx, 1:].tolist()]
-        tem_2025 = sum(1 for periodo in periodos if periodo and periodo[0] == ANO_ANALISE) >= 2
-        if primeira_coluna == "ceasa" or tem_2025:
+        tem_ano_analise = sum(1 for periodo in periodos if periodo and periodo[0] == ano_analise) >= 2
+        if primeira_coluna == "ceasa" or tem_ano_analise:
             header_idx = idx
             break
     if header_idx is None:
@@ -335,7 +335,7 @@ def _extrair_aba_produto_especifico(caminho: Path, aba: str) -> pd.DataFrame:
     headers = bruto.iloc[header_idx].tolist()
     valores = bruto.iloc[linha_ceasa].tolist()
     is_preco = aba_norm.startswith("precos") or "preco" in normalizar_texto(bruto.iloc[2, 0] if len(bruto) > 2 else "")
-    if is_preco and "2026" not in caminho.stem:
+    if is_preco and ano_analise == 2025 and "2026" not in caminho.stem:
         return pd.DataFrame(columns=COLUNAS_FINAIS)
     registros = []
     for col_idx in range(1, len(headers)):
@@ -344,7 +344,7 @@ def _extrair_aba_produto_especifico(caminho: Path, aba: str) -> pd.DataFrame:
         if pd.isna(valor):
             continue
         periodo = _periodo_coluna(header)
-        if not periodo or periodo[0] != ANO_ANALISE:
+        if not periodo or periodo[0] != ano_analise:
             continue
         ano, mes = periodo
         registros.append(
