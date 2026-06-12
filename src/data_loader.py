@@ -22,6 +22,8 @@ def _normalizar_base(df: pd.DataFrame) -> pd.DataFrame:
     df["ano"] = pd.to_numeric(df["ano"], errors="coerce").astype("Int64")
     df["preco_medio_kg"] = pd.to_numeric(df["preco_medio_kg"], errors="coerce")
     df["quantidade_kg"] = pd.to_numeric(df["quantidade_kg"], errors="coerce")
+    colunas_texto = ["ceasa", "produto", "categoria", "fonte_arquivo", "fonte_aba"]
+    df[colunas_texto] = df[colunas_texto].fillna("").astype(str).apply(lambda coluna: coluna.str.strip())
     return df[COLUNAS_FINAIS]
 
 
