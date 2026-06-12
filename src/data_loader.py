@@ -7,9 +7,10 @@ import pandas as pd
 from .preprocessing import COLUNAS_FINAIS
 
 
-PROCESSED_DIR = Path("data/processed")
+BASE_DIR = Path(__file__).resolve().parents[1]
+PROCESSED_DIR = BASE_DIR / "data" / "processed"
 PROCESSED_PATTERN = "conab_prohort_*_ceasa_es.csv"
-SAMPLE_PATH = Path("data/sample/dados_exemplo_conab_prohort_2025.csv")
+SAMPLE_PATH = BASE_DIR / "data" / "sample" / "dados_exemplo_conab_prohort_2025.csv"
 
 
 def _normalizar_base(df: pd.DataFrame) -> pd.DataFrame:
