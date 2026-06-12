@@ -20,7 +20,7 @@ def gerar_insights_gerais(df: pd.DataFrame) -> list[str]:
     if top_preco is not None:
         insights.append(f"Na amostra analisada, {top_preco['produto']} apresentou o maior preço médio anual.")
     if top_qtd is not None:
-        insights.append(f"A análise preliminar indica {top_qtd['produto']} como produto de maior quantidade comercializada.")
+        insights.append(f"A análise indica {top_qtd['produto']} como produto de maior quantidade comercializada.")
     if top_vol is not None:
         insights.append(f"{top_vol['produto']} teve a maior volatilidade de preço na amostra, comportamento que merece investigação posterior.")
     return insights
@@ -51,5 +51,5 @@ def gerar_insights_modelos(df_alertas: pd.DataFrame, df_clusters: pd.DataFrame) 
     if not df_alertas.empty:
         insights.append(f"Foram identificados {len(df_alertas)} pontos de atenção por variação incomum de preço.")
     if not df_clusters.empty:
-        insights.append(f"O K-Means agrupou {df_clusters['produto'].nunique()} produtos em {df_clusters['cluster'].nunique()} grupos preliminares.")
+        insights.append(f"O K-Means agrupou {df_clusters['produto'].nunique()} produtos em {df_clusters['cluster'].nunique()} grupos exploratórios.")
     return insights
