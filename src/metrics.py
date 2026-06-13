@@ -34,7 +34,15 @@ def amplitude_preco(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def volatilidade_preco(df: pd.DataFrame) -> pd.DataFrame:
-    return df.groupby("produto", as_index=False)["preco_medio_kg"].std().rename(columns={"preco_medio_kg": "volatilidade_preco"})
+    volatilidade = (
+        df.groupby("produto", as_index=False)["preco_medio_kg"]
+        .std()
+        .rename(columns={"preco_medio_kg": "volatilidade_preco"})
+    )
+
+    volatilidade["volatilidade_preco"] = volatilidade["volatilidade_preco"].fillna(0)
+
+    return volatilidade
 
 
 def maior_alta_mensal(df: pd.DataFrame, n: int = 10) -> pd.DataFrame:
